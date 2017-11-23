@@ -34,7 +34,7 @@
 #include <AvailabilityMacros.h>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__) && !defined(ANDROID)
 #include <linux/version.h>
 #include <features.h>
 #endif
@@ -63,12 +63,19 @@
 
 /* Test for backtrace() */
 #if defined(__APPLE__) || (defined(__linux__) && defined(__GLIBC__))
+#if !defined(__ANDROID__) && !defined(ANDROID)
 #define HAVE_BACKTRACE 1
+#endif
 #endif
 
 /* MSG_NOSIGNAL. */
 #ifdef __linux__
 #define HAVE_MSG_NOSIGNAL 1
+#endif
+
+/* Test for pthread_cancel() support */
+#if !defined(__ANDROID__) && !defined(ANDROID)
+#define THREAD_CANCEL_SUPPORTED 1
 #endif
 
 /* Test for polling API */
@@ -94,9 +101,13 @@
 #define aof_fsync fsync
 #endif
 
+#if defined(__ANDROID__) || defined(ANDROID)
+#define wait3(a,b,c) (wait4(-1,(a),(b),(c)))
+#endif
+
 /* Define rdb_fsync_range to sync_file_range() on Linux, otherwise we use
  * the plain fsync() call. */
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__) && !defined(ANDROID)
 #if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
 #if (LINUX_VERSION_CODE >= 0x020611 && __GLIBC_PREREQ(2, 6))
 #define HAVE_SYNC_FILE_RANGE 1
